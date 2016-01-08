@@ -12,39 +12,96 @@ class Photo extends Model
 
   protected $fillable = ['path', 'name', 'thumbnail_path'];
 
-  protected $baseDir = 'flyers_uploads/photos';
+  protected $file;
 
+  /**
+   * When a photo is created, prepare a thumbnail, too.
+   * @return void
+   */
+  protected static function boot() {
+    static::creating(function ($photo) {
+      return $photo->upload();
+    });
+  }
+
+  /**
+   * A photo belongs to a flyer.
+   * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+   */
   public function flyer() {
     return $this->belongsTo('App\Flyer');
   }
 
+  public static function fromFile(UploadedFile $file) {
+    $photo = new static;
+
+    $photo->file = $file;
+
+    return $photo->fill([
+      'name' => $photo->fileName(),
+      'path' => $photo->filePath(),
+      'thumbnail_path' => $photo->thumbnailPath()
+    ]);
+  }
+
   /**
-   * Build a news photo instance from a file upload.
+   * Get the base directory for photo uploads
+   * @return string§
    */
-
-  public static function named($name) {
-    return (new static)->saveAs($name);
+  public function baseDir() {
+    return 'flyers_uploads/photos';
   }
 
-  public function saveAs($name) {
-    $this->name = sprintf("%s-%s", time(), $name);
-    $this->path = sprintf("%s/%s", $this->baseDir, $this->name);
-    $this->thumbnail_path = sprintf("%s/tn-%s", $this->baseDir, $this->name);
+  /**
+   * Get the file name for the photo
+   * @return string
+   */
+  public function fileName() {
+    $name = sha1(
+      time() . $this->file->getClientOriginalName()
+    );
 
-    return $this;
+    $extension = $this->file->getClientOriginalExtension();
+
+    return "{$name}.{$extension}";
   }
 
-  public function move(UploadedFile $file) {
-    $file->move($this->baseDir, $this->name);
+  /**
+   * Get the path to the photo.
+   * @return string
+   */
+  public function filePath() {
+    return $this->baseDir() . '/' . $this->fileName();
+  }
+
+  /**
+   * Get the path to the photo´s thumbnail.
+   * @return string
+   */
+  public function thumbnailPath() {
+    return $this->baseDir() . '/tn-' . $this->fileName();
+  }
+
+
+  /**
+   * Move the photo to the proper folder.
+   * @return self
+   */
+  public function upload() {
+    $this->file->move($this->baseDir(), $this->fileName());
 
     $this->makeThumbail();
 
     return $this;
   }
 
+  /**
+   * Create a thumbnail for the photo.
+   * @return void
+   */
   public function makeThumbail() {
-    Image::make($this->path)
+    Image::make($this->filePath())
       ->fit(200)
-      ->save($this->thumbnail_path);
+      ->save($this->thumbnailPath());
   }
 }

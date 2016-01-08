@@ -1,9 +1,7 @@
 <?php
 
 Route::group(['middleware' => ['web']], function () {
-  Route::get('/', function () {
-    return view('pages.home');
-  });
+  Route::get('/', 'PagesController@home');
 
   Route::resource('flyers', 'FlyersController');
 

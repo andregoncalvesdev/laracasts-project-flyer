@@ -20,26 +20,28 @@
 
 
       <div class="col-md-8 gallery">
-          @foreach($flyer->photos->chunk(3) as $set)
-            <div class="row">
-              @foreach ($set as $photo)
-                <img src="/{{ $photo->thumbnail_path }}" alt="" class="thumbnail gallery_image">
-              @endforeach
-            </div>
-          @endforeach
+        @foreach($flyer->photos->chunk(3) as $set)
+          <div class="row">
+            @foreach ($set as $photo)
+              <img src="/{{ $photo->thumbnail_path }}" alt="" class="thumbnail gallery_image">
+            @endforeach
+          </div>
+        @endforeach
+
+        @if($user && $user->owns($flyer))
+          <hr>
+
+          <form
+            action="{{ route('store_photo_path', [$flyer->zip, $flyer->street] )}}"
+            method="POST"
+            id="addPhotosForm"
+            class="dropzone">
+            {{ csrf_field() }}
+          </form>
+        @endif
       </div>
     </div>
   </div>
-
-  <h2>Add Your Photos</h2>
-
-  <form
-    action="{{ route('store_photo_path', [$flyer->zip, $flyer->street] )}}"
-    method="POST"
-    id="addPhotosForm"
-    class="dropzone">
-    {{ csrf_field() }}
-  </form>
 @stop
 
 @section('scripts.footer')
