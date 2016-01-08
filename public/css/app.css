@@ -5755,4 +5755,13 @@ button.close {
 body {
   padding-top: 70px; }
 
+img {
+  max-width: 100%; }
+
+.thumbnail {
+  display: inline-block; }
+
+.gallery_image {
+  margin: 1em; }
+
 /*# sourceMappingURL=app.css.map */
